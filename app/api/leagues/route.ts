@@ -1,7 +1,6 @@
 import {
-  ensureSchema,
   errorResponse,
-  getD1,
+  getSupabase,
   hashPin,
   readLeague,
 } from "./shared";
@@ -71,7 +70,7 @@ export async function POST(request: Request) {
     const schedule = Array.isArray(body.schedule) ? body.schedule : [];
     if (!name || name.length > 32)
       return Response.json(
-        { error: "리그 이름을 확인해주세요." },
+        { error: "리그 이름을 확인해 주세요." },
         { status: 400 },
       );
     if (
@@ -80,7 +79,7 @@ export async function POST(request: Request) {
       teamNames.some((team) => !team || team.length > 18)
     ) {
       return Response.json(
-        { error: "참가자는 3~9명, 팀명은 18자 이하로 입력해주세요." },
+        { error: "참가자는 3~9명, 팀명은 18자 이하로 입력해 주세요." },
         { status: 400 },
       );
     }
@@ -96,45 +95,53 @@ export async function POST(request: Request) {
       );
     if (!isValidSchedule(schedule, teamNames.length, meetingsPerPair)) {
       return Response.json(
-        { error: "경기 일정이 올바르지 않습니다. 일정을 다시 생성해주세요." },
+        { error: "경기 일정이 올바르지 않습니다. 일정을 다시 생성해 주세요." },
         { status: 400 },
       );
     }
 
-    await ensureSchema();
-    const db = getD1();
+    const db = getSupabase();
     const id = createId();
     const pinHash = await hashPin(id, pin);
-    const leagueInsert = db
-      .prepare("INSERT INTO leagues (id, name, pin_hash) VALUES (?1, ?2, ?3)")
-      .bind(id, name, pinHash);
-    const teamInserts = teamNames.map((team, seed) =>
-      db
-        .prepare(
-          "INSERT INTO teams (league_id, name, seed) VALUES (?1, ?2, ?3)",
-        )
-        .bind(id, team, seed),
-    );
-    await db.batch([leagueInsert, ...teamInserts]);
+    const { error: leagueError } = await db.from("leagues").insert({
+      id,
+      name,
+      pin_hash: pinHash,
+    });
+    if (leagueError) throw leagueError;
 
-    const storedTeams = await db
-      .prepare("SELECT id, seed FROM teams WHERE league_id = ?1 ORDER BY seed")
-      .bind(id)
-      .all<{ id: number; seed: number }>();
+    const { data: storedTeams, error: teamError } = await db
+      .from("teams")
+      .insert(
+        teamNames.map((team, seed) => ({
+          league_id: id,
+          name: team,
+          seed,
+        })),
+      )
+      .select("id, seed");
+    if (teamError || !storedTeams) {
+      await db.from("leagues").delete().eq("id", id);
+      throw teamError ?? new Error("참가자 정보를 저장하지 못했습니다.");
+    }
     const ids = new Map(
-      storedTeams.results.map((team: { id: number; seed: number }) => [
+      storedTeams.map((team: { id: number; seed: number }) => [
         team.seed,
         team.id,
       ]),
     );
-    const matchInserts = schedule.map((pair, index) =>
-      db
-        .prepare(
-          "INSERT INTO matches (league_id, round, home_team_id, away_team_id) VALUES (?1, ?2, ?3, ?4)",
-        )
-        .bind(id, index + 1, ids.get(pair.home), ids.get(pair.away)),
+    const { error: matchError } = await db.from("matches").insert(
+      schedule.map((pair, index) => ({
+        league_id: id,
+        round: index + 1,
+        home_team_id: ids.get(pair.home),
+        away_team_id: ids.get(pair.away),
+      })),
     );
-    await db.batch(matchInserts);
+    if (matchError) {
+      await db.from("leagues").delete().eq("id", id);
+      throw matchError;
+    }
     const league = await readLeague(id);
     return Response.json({ league }, { status: 201 });
   } catch (error) {

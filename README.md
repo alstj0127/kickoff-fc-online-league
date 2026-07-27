@@ -29,8 +29,20 @@ npm test
 
 ## 데이터
 
-리그, 팀, 경기 결과는 Cloudflare D1에 저장됩니다. `.openai/hosting.json`의
-`DB` 바인딩을 사용하며, 스키마 변경 내역은 `drizzle/`에서 관리합니다.
+리그, 팀, 경기 결과는 Supabase의 클라우드 PostgreSQL 데이터베이스에
+저장됩니다. `supabase/schema.sql`을 Supabase SQL Editor에서 한 번 실행한
+뒤, `.env.example`을 참고하여 서버 환경변수를 설정합니다.
+
+- `SUPABASE_URL`: 프로젝트 API 주소
+- `SUPABASE_SECRET_KEY`: 서버 전용 Secret key
+
+Secret key는 브라우저 코드나 GitHub 저장소에 올리지 않습니다.
+
+## 배포
+
+GitHub 저장소를 Vercel 프로젝트와 연결하면 `main` 브랜치 변경 사항이
+자동으로 배포됩니다. 위의 Supabase 환경변수는 Vercel 프로젝트 설정에
+추가해야 합니다.
 
 ## 운영 방식
 
