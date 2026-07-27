@@ -1,7 +1,6 @@
 import {
-  ensureSchema,
   errorResponse,
-  getD1,
+  getSupabase,
   hashPin,
   readLeague,
 } from "../../../shared";
@@ -28,41 +27,50 @@ export async function PATCH(
       Number(body.awayScore) <= 99;
     if (!bothEmpty && !bothScores)
       return Response.json(
-        { error: "스코어는 양쪽 모두 0~99 사이로 입력해주세요." },
+        { error: "스코어는 양쪽 모두 0~99 사이로 입력해 주세요." },
         { status: 400 },
       );
 
-    await ensureSchema();
-    const db = getD1();
-    const league = await db
-      .prepare("SELECT pin_hash FROM leagues WHERE id = ?1")
-      .bind(id)
-      .first<{ pin_hash: string }>();
+    const db = getSupabase();
+    const { data: league, error: leagueError } = await db
+      .from("leagues")
+      .select("pin_hash")
+      .eq("id", id)
+      .maybeSingle<{ pin_hash: string }>();
+    if (leagueError) throw leagueError;
     if (!league)
-      return Response.json({ error: "존재하지 않는 리그야." }, { status: 404 });
+      return Response.json(
+        { error: "존재하지 않는 리그입니다." },
+        { status: 404 },
+      );
     if ((await hashPin(id, pin)) !== league.pin_hash)
       return Response.json(
         { error: "관리 PIN이 맞지 않습니다." },
         { status: 403 },
       );
 
-    const result = await db
-      .prepare(
-        "UPDATE matches SET home_score = ?1, away_score = ?2, updated_at = CURRENT_TIMESTAMP WHERE id = ?3 AND league_id = ?4",
-      )
-      .bind(body.homeScore, body.awayScore, Number(matchId), id)
-      .run();
-    if (!result.meta.changes)
+    const { data: updatedMatch, error: matchError } = await db
+      .from("matches")
+      .update({
+        home_score: body.homeScore,
+        away_score: body.awayScore,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", Number(matchId))
+      .eq("league_id", id)
+      .select("id")
+      .maybeSingle();
+    if (matchError) throw matchError;
+    if (!updatedMatch)
       return Response.json(
         { error: "경기를 찾지 못했습니다." },
         { status: 404 },
       );
-    await db
-      .prepare(
-        "UPDATE leagues SET updated_at = CURRENT_TIMESTAMP WHERE id = ?1",
-      )
-      .bind(id)
-      .run();
+    const { error: updateLeagueError } = await db
+      .from("leagues")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (updateLeagueError) throw updateLeagueError;
     return Response.json({ league: await readLeague(id) });
   } catch (error) {
     return errorResponse(error);

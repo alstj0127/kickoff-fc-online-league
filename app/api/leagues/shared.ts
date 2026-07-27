@@ -1,4 +1,12 @@
-import { env } from "cloudflare:workers";
+import "server-only";
+
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+
+type LeagueRow = {
+  id: string;
+  name: string;
+  updated_at: string;
+};
 
 type TeamRow = { id: number; name: string; seed: number };
 type MatchRow = {
@@ -26,49 +34,29 @@ export type LeagueResponse = {
   }[];
 };
 
-export function getD1() {
-  if (!env.DB)
+let supabaseClient: SupabaseClient | null = null;
+
+export function getSupabase() {
+  if (supabaseClient) return supabaseClient;
+
+  const url = process.env.SUPABASE_URL;
+  const secretKey =
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !secretKey) {
     throw new Error(
-      "데이터베이스 연결을 확인하고 있습니다. 잠시 후 다시 시도해주세요.",
+      "데이터베이스 연결이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.",
     );
-  return env.DB;
-}
+  }
 
-let schemaReady: Promise<void> | null = null;
-
-export function ensureSchema() {
-  if (schemaReady) return schemaReady;
-  const db = getD1();
-  schemaReady = db
-    .batch([
-      db.prepare(
-        "CREATE TABLE IF NOT EXISTS leagues (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, pin_hash TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL)",
-      ),
-      db.prepare(
-        "CREATE TABLE IF NOT EXISTS teams (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, league_id TEXT NOT NULL REFERENCES leagues(id) ON DELETE CASCADE, name TEXT NOT NULL, seed INTEGER NOT NULL)",
-      ),
-      db.prepare(
-        "CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, league_id TEXT NOT NULL REFERENCES leagues(id) ON DELETE CASCADE, round INTEGER NOT NULL, home_team_id INTEGER NOT NULL REFERENCES teams(id), away_team_id INTEGER NOT NULL REFERENCES teams(id), home_score INTEGER, away_score INTEGER, updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL)",
-      ),
-      db.prepare(
-        "CREATE INDEX IF NOT EXISTS teams_league_idx ON teams (league_id)",
-      ),
-      db.prepare(
-        "CREATE UNIQUE INDEX IF NOT EXISTS teams_league_name_idx ON teams (league_id, name)",
-      ),
-      db.prepare(
-        "CREATE INDEX IF NOT EXISTS matches_league_idx ON matches (league_id)",
-      ),
-      db.prepare(
-        "CREATE UNIQUE INDEX IF NOT EXISTS matches_league_round_idx ON matches (league_id, round)",
-      ),
-    ])
-    .then(() => undefined)
-    .catch((error: unknown) => {
-      schemaReady = null;
-      throw error;
-    });
-  return schemaReady;
+  supabaseClient = createClient(url, secretKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+  return supabaseClient;
 }
 
 export async function hashPin(leagueId: string, pin: string) {
@@ -80,28 +68,36 @@ export async function hashPin(leagueId: string, pin: string) {
 }
 
 export async function readLeague(id: string): Promise<LeagueResponse | null> {
-  await ensureSchema();
-  const db = getD1();
-  const league = await db
-    .prepare("SELECT id, name, updated_at FROM leagues WHERE id = ?1")
-    .bind(id)
-    .first<{ id: string; name: string; updated_at: string }>();
+  const db = getSupabase();
+  const { data: league, error: leagueError } = await db
+    .from("leagues")
+    .select("id, name, updated_at")
+    .eq("id", id)
+    .maybeSingle<LeagueRow>();
+
+  if (leagueError) throw leagueError;
   if (!league) return null;
 
-  const [teamResult, matchResult] = await db.batch([
+  const [teamResult, matchResult] = await Promise.all([
     db
-      .prepare(
-        "SELECT id, name, seed FROM teams WHERE league_id = ?1 ORDER BY seed",
-      )
-      .bind(id),
+      .from("teams")
+      .select("id, name, seed")
+      .eq("league_id", id)
+      .order("seed", { ascending: true }),
     db
-      .prepare(
-        "SELECT id, round, home_team_id, away_team_id, home_score, away_score FROM matches WHERE league_id = ?1 ORDER BY round",
+      .from("matches")
+      .select(
+        "id, round, home_team_id, away_team_id, home_score, away_score",
       )
-      .bind(id),
+      .eq("league_id", id)
+      .order("round", { ascending: true }),
   ]);
-  const teamRows = teamResult.results as unknown as TeamRow[];
-  const matchRows = matchResult.results as unknown as MatchRow[];
+
+  if (teamResult.error) throw teamResult.error;
+  if (matchResult.error) throw matchResult.error;
+
+  const teamRows = (teamResult.data ?? []) as TeamRow[];
+  const matchRows = (matchResult.data ?? []) as MatchRow[];
   return {
     id: league.id,
     name: league.name,
@@ -125,18 +121,11 @@ export async function readLeague(id: string): Promise<LeagueResponse | null> {
 }
 
 export function errorResponse(error: unknown) {
+  console.error("KICKOFF API error", error);
   const message =
-    error instanceof Error
+    error instanceof Error &&
+    error.message.startsWith("데이터베이스 연결이 아직")
       ? error.message
-      : "예상하지 못한 오류가 발생했습니다.";
-  const missingTable =
-    message.includes("no such table") || message.includes("leagues");
-  return Response.json(
-    {
-      error: missingTable
-        ? "리그 저장소를 준비하고 있습니다. 잠시 후 다시 시도해주세요."
-        : message,
-    },
-    { status: 500 },
-  );
+      : "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  return Response.json({ error: message }, { status: 500 });
 }

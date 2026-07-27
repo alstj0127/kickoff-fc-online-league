@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   FormEvent,
   PointerEvent as ReactPointerEvent,
@@ -269,19 +270,19 @@ function SetupView({
     setError("");
     const cleaned = names.map((name) => name.trim());
     if (cleaned.some((name) => !name)) {
-      setError("모든 팀명을 입력해주세요.");
+      setError("모든 팀명을 입력해 주세요.");
       return null;
     }
     if (new Set(cleaned).size !== cleaned.length) {
-      setError("팀명은 서로 다르게 입력해주세요.");
+      setError("팀명은 서로 다르게 입력해 주세요.");
       return null;
     }
     if (!/^\d{4}$/.test(pin)) {
-      setError("관리 PIN은 숫자 4자리로 정해주세요.");
+      setError("관리 PIN은 숫자 4자리로 정해 주세요.");
       return null;
     }
     if (!leagueName.trim()) {
-      setError("리그 이름을 입력해주세요.");
+      setError("리그 이름을 입력해 주세요.");
       return null;
     }
     return cleaned;
@@ -357,7 +358,7 @@ function SetupView({
       onCreated(body.league, pin);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "잠시 후 다시 시도해주세요.",
+        cause instanceof Error ? cause.message : "잠시 후 다시 시도해 주세요.",
       );
     } finally {
       setLoading(false);
@@ -373,7 +374,7 @@ function SetupView({
             value={leagueName}
             maxLength={32}
             onChange={(event) => setLeagueName(event.target.value)}
-            placeholder="예: 금요 FC 리그"
+            placeholder="예: 우리들의 FC 리그"
             required
           />
         </label>
@@ -474,10 +475,10 @@ function SetupView({
   return (
     <main className="setup-page">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="킥오프 홈">
+        <Link className="brand" href="/" aria-label="킥오프 홈">
           <span className="brand-mark">K</span>
           <span>KICKOFF</span>
-        </a>
+        </Link>
         <span className="top-note">친구들과 만드는 우리만의 리그</span>
       </header>
 
@@ -531,8 +532,8 @@ function SetupView({
             <p>{draftSchedule ? "일정 조정" : "리그 만들기"}</p>
             <h2>
               {draftSchedule
-                ? "경기 순서를 확인하고 확정하세요"
-                : "누가 우승할지 정해볼까요?"}
+                ? "경기 순서를 확인하고 확정해 주세요"
+                : "우리만의 우승 경쟁을 시작해 보세요"}
             </h2>
           </div>
         </div>
@@ -558,7 +559,7 @@ function SetupView({
               </button>
             </div>
             <p className="drag-guide">
-              <span>☷</span> 경기 카드를 드래그해 원하는 순서로 옮겨보세요.
+              <span>☷</span> 경기 카드를 드래그해 원하는 순서로 옮겨 보세요.
             </p>
             <div className="draft-list">
               {draftSchedule.map((match, index) => (
@@ -651,7 +652,7 @@ function SetupView({
                 disabled={loading}
               >
                 <span>
-                  {loading ? "리그 만드는 중..." : "이 일정으로 리그 확정"}
+                  {loading ? "리그 생성 중..." : "이 일정으로 리그 확정"}
                 </span>
                 <span>✓</span>
               </button>
@@ -694,10 +695,12 @@ function ScoreEditor({
     (homeDraft !== "" && awayDraft !== "");
 
   useEffect(() => {
-    if (!userEditing) {
+    if (userEditing) return;
+    const syncTimer = window.setTimeout(() => {
       setHomeDraft(serverHome);
       setAwayDraft(serverAway);
-    }
+    }, 0);
+    return () => window.clearTimeout(syncTimer);
   }, [serverHome, serverAway, userEditing]);
 
   function cleanScore(value: string) {
@@ -723,6 +726,8 @@ function ScoreEditor({
           aria-label={`${homeName} 점수`}
           inputMode="numeric"
           type="text"
+          maxLength={2}
+          enterKeyHint="next"
           value={homeDraft}
           onChange={(event) => {
             setUserEditing(true);
@@ -738,6 +743,8 @@ function ScoreEditor({
           aria-label={`${awayName} 점수`}
           inputMode="numeric"
           type="text"
+          maxLength={2}
+          enterKeyHint="done"
           value={awayDraft}
           onChange={(event) => {
             setUserEditing(true);
@@ -769,6 +776,7 @@ function ScoreEditor({
           match.homeScore !== null ? "save-result saved" : "save-result"
         }
         onClick={() => void submitScore()}
+        type="button"
         disabled={saving || !dirty || !complete}
         title={!complete ? "양 팀 점수를 모두 입력해 주세요" : undefined}
       >
@@ -818,7 +826,7 @@ function LeagueView({
     awayScore: number | null,
   ) {
     if (!/^\d{4}$/.test(editPin)) {
-      setMessage("관리 PIN 4자리를 입력해주세요.");
+      setMessage("관리 PIN 4자리를 입력해 주세요.");
       return false;
     }
     setSaving(match.id);
@@ -848,7 +856,7 @@ function LeagueView({
       return true;
     } catch (cause) {
       setMessage(
-        cause instanceof Error ? cause.message : "잠시 후 다시 시도해주세요.",
+        cause instanceof Error ? cause.message : "잠시 후 다시 시도해 주세요.",
       );
       return false;
     } finally {
@@ -861,17 +869,17 @@ function LeagueView({
       await navigator.clipboard.writeText(window.location.href);
       setMessage("공유 링크를 복사했습니다.");
     } catch {
-      setMessage("주소창의 링크를 복사해 친구에게 보내주세요.");
+      setMessage("주소창의 링크를 복사해 친구에게 보내 주세요.");
     }
   }
 
   return (
     <main className="league-page">
       <header className="league-header">
-        <a className="brand brand-light" href="/">
+        <Link className="brand brand-light" href="/">
           <span className="brand-mark">K</span>
           <span>KICKOFF</span>
-        </a>
+        </Link>
         <div className="live-pill">
           <span /> LIVE LEAGUE
         </div>
@@ -944,7 +952,7 @@ function LeagueView({
                 })}
               </span>
             </div>
-            <div className="table-scroll">
+            <div className="table-scroll desktop-standings">
               <table>
                 <thead>
                   <tr>
@@ -1012,6 +1020,76 @@ function LeagueView({
                 </tbody>
               </table>
             </div>
+            <ol className="mobile-standings" aria-label="현재 리그 순위">
+              {standings.map((team, index) => (
+                <li className="mobile-standing" key={team.id}>
+                  <div className="mobile-standing-main">
+                    <span
+                      className={`rank ${index < 3 ? `rank-${index + 1}` : ""}`}
+                      aria-label={`${index + 1}위`}
+                    >
+                      {index + 1}
+                    </span>
+                    <TeamCrest name={team.name} index={team.seed} small />
+                    <strong className="mobile-team-name">{team.name}</strong>
+                    <div className="mobile-points">
+                      <strong>{team.points}</strong>
+                      <span>승점</span>
+                    </div>
+                  </div>
+                  <div className="mobile-standing-detail">
+                    <span>
+                      <b>{team.played}</b> 경기
+                    </span>
+                    <span>
+                      <b>{team.won}</b>승
+                    </span>
+                    <span>
+                      <b>{team.drawn}</b>무
+                    </span>
+                    <span>
+                      <b>{team.lost}</b>패
+                    </span>
+                    <span
+                      className={
+                        team.goalDifference > 0
+                          ? "positive"
+                          : team.goalDifference < 0
+                            ? "negative"
+                            : ""
+                      }
+                    >
+                      득실{" "}
+                      <b>
+                        {team.goalDifference > 0 ? "+" : ""}
+                        {team.goalDifference}
+                      </b>
+                    </span>
+                  </div>
+                  <div className="mobile-form">
+                    <span>최근 경기</span>
+                    <div
+                      className="form-dots"
+                      aria-label={
+                        team.form.length
+                          ? `최근 경기 ${team.form.join(", ")}`
+                          : "아직 진행된 경기가 없습니다"
+                      }
+                    >
+                      {team.form.length ? (
+                        team.form.map((result, resultIndex) => (
+                          <span className={result} key={resultIndex}>
+                            {result}
+                          </span>
+                        ))
+                      ) : (
+                        <small>아직 진행된 경기가 없습니다</small>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
             <div className="legend">
               <span>
                 <i className="champion" /> 우승권
@@ -1108,11 +1186,11 @@ function LeagueView({
             <span className="sync-icon">↻</span>
             <div>
               <strong>자동 동기화 중</strong>
-              <small>다른 기기의 결과를 5초마다 반영해요.</small>
+              <small>다른 기기의 결과를 5초마다 반영합니다.</small>
             </div>
           </div>
           {message && (
-            <div className="toast" role="status">
+            <div className="toast" role="status" aria-live="polite">
               {message}
             </div>
           )}
@@ -1169,7 +1247,8 @@ export default function Home() {
   );
 
   useEffect(() => {
-    loadLeague();
+    const initialLoadTimer = window.setTimeout(() => void loadLeague(), 0);
+    return () => window.clearTimeout(initialLoadTimer);
   }, [loadLeague]);
 
   useEffect(() => {
@@ -1196,7 +1275,7 @@ export default function Home() {
       <main className="loading-page">
         <div className="ball-loader error">!</div>
         <h1>{loadError}</h1>
-        <a href="/">새 리그 만들기</a>
+        <Link href="/">새 리그 만들기</Link>
       </main>
     );
   if (league)

@@ -145,6 +145,7 @@ input:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px r
 .section-title h2 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
 .section-title > span { color: #9597a0; font-size: 11px; }
 .table-scroll { overflow-x: auto; }
+.mobile-standings { display: none; }
 table { width: 100%; border-collapse: collapse; min-width: 750px; }
 th { height: 40px; background: #fafafa; color: #8e9099; font: 500 10px/1 "DM Mono"; text-align: center; }
 th:nth-child(2) { text-align: left; }
@@ -241,7 +242,29 @@ td:nth-child(2) { text-align: left; font-family: "Noto Sans KR"; color: var(--in
   .progress-card { display: none; }
   .tabs { padding: 0 17px; }
   .dashboard-shell { padding: 18px 10px 50px; }
+  .standings-card { overflow: hidden; }
   .section-title { padding: 20px 16px; }.section-title > span { display: none; }
+  .desktop-standings { display: none; }
+  .mobile-standings { display: block; list-style: none; margin: 0; padding: 0; }
+  .mobile-standing { padding: 15px 15px 13px; border-bottom: 1px solid var(--line); }
+  .mobile-standing:last-child { border-bottom: 0; }
+  .mobile-standing-main { display: grid; grid-template-columns: 28px 34px minmax(0, 1fr) 46px; align-items: center; gap: 9px; }
+  .mobile-standing-main .rank { width: 26px; height: 26px; font: 600 12px/1 "DM Mono"; }
+  .mobile-standing-main .crest-small { width: 31px; height: 35px; font-size: 8px; }
+  .mobile-team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; letter-spacing: -.02em; }
+  .mobile-points { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .mobile-points strong { color: var(--ink); font: 600 20px/1 "DM Mono"; }
+  .mobile-points span { color: #9799a2; font-size: 9px; font-weight: 700; }
+  .mobile-standing-detail { display: grid; grid-template-columns: repeat(5, max-content); gap: 13px; align-items: center; padding: 11px 0 10px 71px; color: #8a8c95; font-size: 10px; }
+  .mobile-standing-detail b { color: #535661; font: 600 11px/1 "DM Mono"; }
+  .mobile-standing-detail .positive b { color: #24a66f; }
+  .mobile-standing-detail .negative b { color: #e55368; }
+  .mobile-form { display: flex; min-height: 24px; align-items: center; justify-content: space-between; margin-left: 71px; padding-top: 9px; border-top: 1px solid #f0f0f2; }
+  .mobile-form > span { color: #a0a2aa; font-size: 9px; font-weight: 700; }
+  .mobile-form .form-dots { min-width: 0; justify-content: flex-end; }
+  .mobile-form .form-dots span { width: 20px; height: 20px; font-size: 8px; }
+  .mobile-form .form-dots small { padding: 0; font-size: 9px; }
+  .legend { flex-wrap: wrap; gap: 8px 18px; padding: 13px 16px; line-height: 1.4; }
   .side-panel { grid-template-columns: 1fr; }
   .next-card { display: none; }
   .fixture { grid-template-columns: 38px 1fr 78px 1fr; gap: 6px; padding: 12px 2px; }
