@@ -20,6 +20,9 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(page, /최근 5경기/);
   assert.match(page, /관리 PIN/);
   assert.match(page, /setInterval\(\(\) => loadLeague\(true\), 5000\)/);
-  assert.match(api, /overlapsPrevious \* 100/);
+  assert.match(page, /overlapsPrevious \* 100/);
+  assert.match(page, /이 일정으로 리그 확정/);
+  assert.match(page, /두 번씩 대결/);
+  assert.match(api, /isValidSchedule/);
   assert.match(api, /INSERT INTO matches/);
 });
