@@ -14,7 +14,18 @@ test("build includes KICKOFF metadata and social preview", async () => {
 });
 
 test("includes league scheduling, scoring, and standings product flows", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const page = await readFile(
+    new URL("../app/league-manager.tsx", import.meta.url),
+    "utf8",
+  );
+  const homeRoute = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const leagueRoute = await readFile(
+    new URL("../app/leagues/[leagueId]/page.tsx", import.meta.url),
+    "utf8",
+  );
   const api = await readFile(new URL("../app/api/leagues/route.ts", import.meta.url), "utf8");
   const leagueApi = await readFile(
     new URL("../app/api/leagues/[id]/route.ts", import.meta.url),
@@ -37,6 +48,10 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(page, /두 번씩 대결/);
   assert.match(page, /진행 중인 리그/);
   assert.match(page, /정말 이 리그를 삭제하시겠습니까/);
+  assert.match(page, /href=\{`\/leagues\/\$\{encodeURIComponent\(item\.id\)\}`\}/);
+  assert.match(page, /<Link className="brand brand-light" href="\/">/);
+  assert.match(homeRoute, /redirect\(`\/leagues\/\$\{encodeURIComponent\(legacyLeagueId\)\}`\)/);
+  assert.match(leagueRoute, /<LeaguePage leagueId=\{leagueId\} \/>/);
   assert.match(api, /isValidSchedule/);
   assert.match(api, /isNewManagerPin\(pin\)/);
   assert.match(api, /from\("matches"\)\.insert/);
