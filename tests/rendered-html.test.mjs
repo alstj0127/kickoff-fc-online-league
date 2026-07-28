@@ -24,6 +24,9 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(page, /calculateStandings/);
   assert.match(page, /최근 5경기/);
   assert.match(page, /관리 PIN/);
+  assert.match(page, /관리 PIN은 숫자 6자리/);
+  assert.match(page, /기존 리그는 4자리 PIN도 사용할 수 있습니다/);
+  assert.match(page, /NEW_MANAGER_PIN_LENGTH = 6/);
   assert.match(page, /setInterval\(\(\) => loadLeague\(true\), 5000\)/);
   assert.match(page, /overlapsPrevious \* 100/);
   assert.match(page, /이 일정으로 리그 확정/);
@@ -31,9 +34,11 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(page, /진행 중인 리그/);
   assert.match(page, /정말 이 리그를 삭제하시겠습니까/);
   assert.match(api, /isValidSchedule/);
+  assert.match(api, /isNewManagerPin\(pin\)/);
   assert.match(api, /from\("matches"\)\.insert/);
   assert.match(api, /export async function GET/);
   assert.match(leagueApi, /export async function DELETE/);
   assert.match(leagueApi, /hashPin\(id, pin\)/);
+  assert.match(leagueApi, /isSupportedManagerPin\(pin\)/);
   assert.match(schema, /enable row level security/);
 });

@@ -2,6 +2,7 @@ import {
   errorResponse,
   getSupabase,
   hashPin,
+  isSupportedManagerPin,
   readLeague,
 } from "../shared";
 
@@ -28,9 +29,12 @@ export async function DELETE(
     const { id } = await context.params;
     const body = (await request.json().catch(() => ({}))) as { pin?: string };
     const pin = body.pin ?? "";
-    if (!/^\d{4}$/.test(pin)) {
+    if (!isSupportedManagerPin(pin)) {
       return Response.json(
-        { error: "관리 PIN 4자리를 입력해 주세요." },
+        {
+          error:
+            "관리 PIN 6자리를 입력해 주세요. 기존 리그는 4자리 PIN도 사용할 수 있습니다.",
+        },
         { status: 400 },
       );
     }
