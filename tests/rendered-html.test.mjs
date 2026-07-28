@@ -20,6 +20,10 @@ test("includes league scheduling, scoring, and standings product flows", async (
     new URL("../app/api/leagues/[id]/route.ts", import.meta.url),
     "utf8",
   );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
   const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
   assert.match(page, /calculateStandings/);
   assert.match(page, /최근 5경기/);
@@ -40,5 +44,7 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(leagueApi, /export async function DELETE/);
   assert.match(leagueApi, /hashPin\(id, pin\)/);
   assert.match(leagueApi, /isSupportedManagerPin\(pin\)/);
+  assert.match(styles, /\.pin-row input \{ width: 126px/);
+  assert.match(styles, /\.pin-inline input \{ width: 96px/);
   assert.match(schema, /enable row level security/);
 });

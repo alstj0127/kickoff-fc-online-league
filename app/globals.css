@@ -67,7 +67,7 @@ input:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px r
 .pin-row { display: flex; align-items: center; justify-content: space-between; margin: 19px 0 15px; padding: 12px 14px; border-radius: 6px; background: #f5f4ff; }
 .pin-row small { display: block; color: #858792; font-size: 11px; }
 .pin-row > div > span { margin-bottom: 3px; color: #5545b0; }
-.pin-row input { width: 100px; height: 38px; background: white; text-align: center; letter-spacing: .45em; padding-left: 12px; font: 600 15px/1 "DM Mono"; }
+.pin-row input { width: 126px; height: 38px; flex: 0 0 126px; background: white; text-align: center; letter-spacing: .4em; padding: 0 10px 0 16px; font: 600 15px/1 "DM Mono"; }
 .primary-button { width: 100%; height: 54px; border: 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; color: white; background: var(--ink); font-size: 15px; font-weight: 800; box-shadow: 0 5px 0 var(--lime); transition: transform .2s; }
 .primary-button:hover { transform: translateY(-2px); }
 .primary-button:disabled { opacity: .6; cursor: wait; }
@@ -218,7 +218,7 @@ td:nth-child(2) { text-align: left; font-family: "Noto Sans KR"; color: var(--in
 
 .fixtures-card { min-width: 0; }
 .pin-inline { display: flex; align-items: center; gap: 8px; color: #7f818b; font-size: 11px; }
-.pin-inline input { width: 75px; height: 32px; text-align: center; letter-spacing: .25em; font: 500 11px/1 "DM Mono"; }
+.pin-inline input { width: 96px; height: 32px; text-align: center; letter-spacing: .25em; padding: 0 8px 0 11px; font: 500 11px/1 "DM Mono"; }
 .fixtures-list { padding: 6px 20px 20px; }
 .fixture { min-height: 78px; display: grid; grid-template-columns: 55px minmax(105px, 1fr) 92px minmax(105px, 1fr) 80px; gap: 13px; align-items: center; border-bottom: 1px solid #ececf0; padding: 9px 5px; }
 .fixture-next { background: linear-gradient(90deg, #f4f1ff, transparent); border-left: 3px solid var(--purple); padding-left: 8px; }
