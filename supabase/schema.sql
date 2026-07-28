@@ -48,3 +48,10 @@ revoke all on table public.matches from anon, authenticated;
 
 revoke all on sequence public.teams_id_seq from anon, authenticated;
 revoke all on sequence public.matches_id_seq from anon, authenticated;
+
+grant usage on schema public to service_role;
+grant select, insert, update, delete on table public.leagues to service_role;
+grant select, insert, update, delete on table public.teams to service_role;
+grant select, insert, update, delete on table public.matches to service_role;
+grant usage, select on sequence public.teams_id_seq to service_role;
+grant usage, select on sequence public.matches_id_seq to service_role;
