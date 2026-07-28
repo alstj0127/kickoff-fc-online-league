@@ -24,6 +24,8 @@ button { cursor: pointer; }
 .brand { color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 11px; font: 900 17px/1 "DM Mono", monospace; letter-spacing: .06em; }
 .brand-mark { display: grid; place-items: center; width: 29px; height: 29px; color: var(--ink); background: var(--lime); font: 900 18px/1 "DM Mono"; transform: skew(-7deg); border-radius: 3px; box-shadow: 3px 3px 0 var(--ink); }
 .top-note { color: #878a95; font-size: 14px; letter-spacing: .04em; }
+.topbar-actions { display: flex; align-items: center; gap: 19px; }
+.topbar-actions > a { padding: 9px 12px; border: 1px solid #d9dae0; border-radius: 5px; color: #545761; background: #ffffffb8; font-size: 12px; font-weight: 800; text-decoration: none; }
 
 .setup-page { min-height: 100vh; overflow: hidden; position: relative; background: linear-gradient(115deg, #f7f7f8 0 56%, #eeeef1 56%); }
 .setup-page::before { content: ""; position: absolute; right: -100px; top: 65px; width: 48vw; height: 520px; opacity: .5; background-image: linear-gradient(#dfe0e5 1px, transparent 1px), linear-gradient(90deg, #dfe0e5 1px, transparent 1px); background-size: 44px 44px; transform: perspective(600px) rotateY(-12deg) rotateZ(-4deg); mask-image: linear-gradient(to bottom, #000, transparent); }
@@ -40,6 +42,8 @@ button { cursor: pointer; }
 .hero-stats span { font: 500 8px/1.35 "DM Mono"; color: #92949d; letter-spacing: .08em; }
 
 .setup-card { position: relative; z-index: 2; width: min(620px, 46vw); margin: 38px max(5vw, 48px) 64px auto; background: white; border-radius: 8px; box-shadow: 0 24px 70px rgba(21, 22, 31, .13); padding: 34px 40px 25px; }
+.setup-notice { display: flex; align-items: center; gap: 8px; margin: -5px 0 22px; padding: 11px 13px; border: 1px solid #c7ecd9; border-radius: 5px; color: #237653; background: #effbf5; font-size: 12px; font-weight: 700; }
+.setup-notice span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: white; background: #27a76f; }
 .card-heading { display: flex; gap: 18px; align-items: flex-start; padding-bottom: 25px; border-bottom: 1px solid var(--line); }
 .step-number { font: 500 12px/1 "DM Mono"; color: white; background: var(--purple); padding: 7px 8px; border-radius: 2px; }
 .card-heading p, .section-title p, .fixtures-title p { font: 500 12px/1 "DM Mono"; color: var(--purple); letter-spacing: .12em; margin: 1px 0 7px; }
@@ -115,6 +119,33 @@ input:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px r
 .confirm-actions { display: grid; grid-template-columns: 128px 1fr; gap: 10px; margin-top: 14px; }
 .secondary-button { border: 1px solid #dcdde3; border-radius: 5px; background: white; color: #656873; font-size: 12px; font-weight: 700; }
 
+.league-directory { position: relative; z-index: 2; width: min(1320px, calc(100% - max(10vw, 56px))); margin: 0 auto 80px; padding: 28px 30px 30px; border: 1px solid #e3e3e8; border-radius: 9px; background: #fff; box-shadow: 0 16px 45px #191a2312; }
+.directory-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.directory-heading p { margin: 0 0 7px; color: var(--purple); font: 500 10px/1 "DM Mono"; letter-spacing: .14em; }
+.directory-heading h2 { margin: 0 0 5px; font-size: 24px; letter-spacing: -.04em; }
+.directory-heading span { color: #8b8d96; font-size: 11px; }
+.directory-heading button, .directory-state button { border: 1px solid #dddde3; border-radius: 5px; color: #626570; background: #fafafa; padding: 9px 11px; font-size: 11px; font-weight: 700; }
+.league-list { display: flex; flex-direction: column; }
+.league-list-item { min-height: 88px; display: grid; grid-template-columns: 46px minmax(210px, 1fr) minmax(130px, 190px) 72px 118px; gap: 18px; align-items: center; border-bottom: 1px solid #ededf0; }
+.league-list-item:last-child { border-bottom: 0; }
+.league-list-rank { color: #a2a4ac; font: 500 12px/1 "DM Mono"; text-align: center; }
+.league-list-main { min-width: 0; }
+.league-list-main > span { display: block; margin-bottom: 4px; color: #9a9ca5; font: 400 8px/1 "DM Mono"; letter-spacing: .08em; }
+.league-list-main h3 { overflow: hidden; margin: 0 0 5px; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.league-list-main small { color: #858792; font-size: 10px; }
+.league-list-progress { display: grid; grid-template-columns: 1fr 37px; align-items: center; gap: 9px; }
+.league-list-progress > div { height: 5px; overflow: hidden; border-radius: 5px; background: #e9e9ed; }
+.league-list-progress span { display: block; height: 100%; background: var(--purple); }
+.league-list-progress strong { color: #5f626c; font: 500 10px/1 "DM Mono"; }
+.league-list-item time { color: #8d8f98; font-size: 10px; text-align: center; }
+.enter-league { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 5px; color: white; background: var(--ink); font-size: 11px; font-weight: 800; text-decoration: none; }
+.enter-league span { color: var(--lime); font-size: 15px; }
+.directory-state { min-height: 135px; display: flex; align-items: center; justify-content: center; color: #8d8f98; font-size: 12px; text-align: center; }
+.directory-state.error, .directory-state.empty { flex-direction: column; gap: 8px; }
+.directory-state.error p { margin: 0; color: #ce3e55; }
+.directory-state.empty strong, .directory-state.empty span { display: block; }
+.directory-state.empty strong { color: #555862; font-size: 14px; }
+
 .league-page { min-height: 100vh; background: #f4f4f6; }
 .league-header { background: #16171e; color: white; }
 .brand-light { color: white; }
@@ -123,6 +154,8 @@ input:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px r
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px transparent; } }
 .share-button { border: 1px solid #3d3f49; color: white; background: #22232b; border-radius: 5px; padding: 10px 14px; font-size: 12px; font-weight: 700; }
 .share-button span { color: var(--lime); margin-left: 6px; }
+.league-header-actions { display: flex; align-items: center; gap: 8px; }
+.delete-league-button { border: 1px solid #57343b; color: #ff9cac; background: #261e23; border-radius: 5px; padding: 10px 12px; font-size: 11px; font-weight: 800; }
 .league-hero { min-height: 190px; display: flex; align-items: center; justify-content: space-between; padding: 30px max(6.5vw, 35px); color: white; background: #16171e; position: relative; overflow: hidden; }
 .league-hero::after { content: ""; position: absolute; inset: 0 0 0 50%; background-image: linear-gradient(#2a2b35 1px, transparent 1px), linear-gradient(90deg, #2a2b35 1px, transparent 1px); background-size: 38px 38px; transform: skewX(-15deg); opacity: .55; }
 .league-hero > div { position: relative; z-index: 1; }
@@ -215,12 +248,30 @@ td:nth-child(2) { text-align: left; font-family: "Noto Sans KR"; color: var(--in
 @keyframes bounce { to { transform: translateY(-8px); } }
 .loading-page p { color: #898b94; font-size: 14px; }.loading-page h1 { font-size: 20px; }.loading-page a { color: var(--purple); font-weight: 700; font-size: 14px; }
 
+.delete-modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 22px; background: #11121ad9; backdrop-filter: blur(5px); }
+.delete-modal { width: min(440px, 100%); padding: 31px; border: 1px solid #f0d3d8; border-radius: 9px; background: white; box-shadow: 0 30px 90px #0006; }
+.danger-mark { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 18px; border-radius: 50%; color: white; background: #df4059; font: 800 19px/1 "DM Mono"; box-shadow: 0 0 0 7px #fff0f2; }
+.delete-modal > p:first-of-type { margin: 0 0 7px; color: #cf304a; font: 500 9px/1 "DM Mono"; letter-spacing: .14em; }
+.delete-modal h2 { margin: 0; font-size: 23px; line-height: 1.35; letter-spacing: -.04em; }
+.delete-warning { margin: 14px 0 22px; color: #777a84; font-size: 12px; line-height: 1.7; }
+.delete-warning strong { color: #353741; }
+.delete-modal label > span { display: block; margin-bottom: 8px; color: #585b65; font-size: 12px; font-weight: 800; }
+.delete-modal label input { width: 100%; height: 48px; text-align: center; letter-spacing: .5em; font: 600 15px/1 "DM Mono"; }
+.delete-error { margin: 10px 0 0; color: #d7324d; font-size: 12px; }
+.delete-modal-actions { display: grid; grid-template-columns: 95px 1fr; gap: 9px; margin-top: 19px; }
+.delete-modal-actions button { height: 45px; border: 1px solid #dedfe4; border-radius: 5px; color: #62656f; background: #fafafa; font-size: 12px; font-weight: 800; }
+.delete-modal-actions .confirm-delete { border-color: #d9344f; color: white; background: #d9344f; }
+.delete-modal-actions button:disabled { opacity: .5; cursor: default; }
+
 @media (max-width: 950px) {
   .setup-page { background: #f5f5f7; }
   .hero { position: relative; top: auto; left: auto; padding: 60px 6vw 40px; max-width: none; }
   .hero h1 { font-size: clamp(48px, 11vw, 72px); }
   .setup-card { width: auto; margin: 10px 5vw 60px; }
   .schedule-builder-card { width: auto; }
+  .league-directory { width: auto; margin: 0 5vw 60px; }
+  .league-list-item { grid-template-columns: 42px minmax(180px, 1fr) 140px 105px; }
+  .league-list-item time { display: none; }
   .dashboard-shell { grid-template-columns: 1fr; }
   .side-panel { display: grid; grid-template-columns: 1fr 1fr; }
   .toast { grid-column: 1 / -1; }
@@ -229,17 +280,29 @@ td:nth-child(2) { text-align: left; font-family: "Noto Sans KR"; color: var(--in
 @media (max-width: 620px) {
   .topbar, .league-header { height: 62px; padding: 0 18px; }
   .top-note, .live-pill { display: none; }
+  .topbar-actions { gap: 0; }
+  .topbar-actions > a { padding: 8px 10px; font-size: 10px; }
   .hero { padding: 45px 22px 25px; }
   .hero h1 { margin-top: 20px; font-size: 46px; }
   .hero > p { font-size: 13px; }.desktop-only { display: none; }
   .hero-stats { gap: 24px; margin-top: 32px; }
   .setup-card { padding: 26px 18px 22px; margin: 20px 12px 40px; }
+  .league-directory { margin: 0 12px 45px; padding: 22px 15px 16px; }
+  .directory-heading { align-items: center; }
+  .directory-heading h2 { font-size: 21px; }
+  .directory-heading span { display: none; }
+  .league-list-item { grid-template-columns: 32px minmax(0, 1fr) 95px; gap: 9px; padding: 13px 0; }
+  .league-list-progress, .league-list-item time { display: none; }
+  .league-list-main h3 { font-size: 14px; }
+  .enter-league { padding: 9px 10px; font-size: 10px; }
   .field-row { grid-template-columns: 1fr 105px; }
   .team-grid { grid-template-columns: 1fr; }
   .mode-picker { grid-template-columns: 1fr; }
   .league-hero { min-height: 175px; padding: 30px 20px; }
   .league-hero h1 { font-size: 35px; }
   .progress-card { display: none; }
+  .delete-league-button { padding: 9px 9px; font-size: 10px; }
+  .share-button { padding: 9px 10px; font-size: 10px; }
   .tabs { padding: 0 17px; }
   .dashboard-shell { padding: 18px 10px 50px; }
   .standings-card { overflow: hidden; }
@@ -281,4 +344,7 @@ td:nth-child(2) { text-align: left; font-family: "Noto Sans KR"; color: var(--in
   .draft-team.home { text-align: center; }
   .confirm-actions { grid-template-columns: 1fr; }
   .secondary-button { height: 44px; order: 2; }
+  .delete-modal { padding: 27px 21px 22px; }
+  .delete-modal h2 { font-size: 21px; }
+  .delete-modal-actions { grid-template-columns: 82px 1fr; }
 }

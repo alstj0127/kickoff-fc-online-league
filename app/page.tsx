@@ -28,6 +28,14 @@ type League = {
   updatedAt: string;
   meetingsPerPair?: 1 | 2;
 };
+type LeagueSummary = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  teamCount: number;
+  matchCount: number;
+  playedCount: number;
+};
 
 type DraftMatch = { draftId: string; home: number; away: number };
 
@@ -233,10 +241,120 @@ function hasConsecutivePlayer(schedule: DraftMatch[], index: number) {
   );
 }
 
+function LeagueDirectory() {
+  const [leagues, setLeagues] = useState<LeagueSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadLeagues = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/leagues", { cache: "no-store" });
+      const body = (await response.json()) as {
+        leagues?: LeagueSummary[];
+        error?: string;
+      };
+      if (!response.ok || !body.leagues) {
+        throw new Error(body.error || "리그 목록을 불러오지 못했습니다.");
+      }
+      setLeagues(body.leagues);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "리그 목록을 불러오지 못했습니다.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadLeagues(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadLeagues]);
+
+  return (
+    <section className="league-directory" id="saved-leagues">
+      <div className="directory-heading">
+        <div>
+          <p>LEAGUE ARCHIVE</p>
+          <h2>진행 중인 리그</h2>
+          <span>최근에 수정된 리그부터 표시됩니다.</span>
+        </div>
+        <button type="button" onClick={() => void loadLeagues()}>
+          ↻ 새로고침
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="directory-state">리그 목록을 불러오는 중입니다...</div>
+      ) : error ? (
+        <div className="directory-state error">
+          <p>{error}</p>
+          <button type="button" onClick={() => void loadLeagues()}>
+            다시 시도
+          </button>
+        </div>
+      ) : leagues.length ? (
+        <div className="league-list">
+          {leagues.map((item, index) => {
+            const progress = item.matchCount
+              ? Math.round((item.playedCount / item.matchCount) * 100)
+              : 0;
+            return (
+              <article className="league-list-item" key={item.id}>
+                <div className="league-list-rank">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div className="league-list-main">
+                  <span>{item.id.toUpperCase()}</span>
+                  <h3>{item.name}</h3>
+                  <small>
+                    {item.teamCount}팀 · {item.playedCount}/{item.matchCount}경기
+                    완료
+                  </small>
+                </div>
+                <div className="league-list-progress">
+                  <div>
+                    <span style={{ width: `${progress}%` }} />
+                  </div>
+                  <strong>{progress}%</strong>
+                </div>
+                <time dateTime={item.updatedAt}>
+                  {new Date(item.updatedAt).toLocaleDateString("ko-KR", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
+                <Link
+                  className="enter-league"
+                  href={`/?league=${item.id}`}
+                  aria-label={`${item.name} 리그 입장`}
+                >
+                  리그 입장 <span>→</span>
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="directory-state empty">
+          <strong>아직 만들어진 리그가 없습니다.</strong>
+          <span>위에서 첫 리그를 만들어 보세요.</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SetupView({
   onCreated,
+  notice,
 }: {
   onCreated: (league: League, pin: string) => void;
+  notice?: string;
 }) {
   const [count, setCount] = useState(4);
   const [leagueName, setLeagueName] = useState("우리들의 FC 리그");
@@ -479,7 +597,10 @@ function SetupView({
           <span className="brand-mark">K</span>
           <span>KICKOFF</span>
         </Link>
-        <span className="top-note">친구들과 만드는 우리만의 리그</span>
+        <div className="topbar-actions">
+          <span className="top-note">친구들과 만드는 우리만의 리그</span>
+          <a href="#saved-leagues">기존 리그 보기</a>
+        </div>
       </header>
 
       <section className="hero">
@@ -526,6 +647,11 @@ function SetupView({
       <section
         className={`setup-card ${draftSchedule ? "schedule-builder-card" : ""}`}
       >
+        {notice && (
+          <p className="setup-notice" role="status">
+            <span>✓</span> {notice}
+          </p>
+        )}
         <div className="card-heading">
           <span className="step-number">{draftSchedule ? "02" : "01"}</span>
           <div>
@@ -663,6 +789,7 @@ function SetupView({
           <span>✓</span> 연속 출전을 최소화하도록 경기 순서를 자동 조정합니다.
         </p>
       </section>
+      <LeagueDirectory />
     </main>
   );
 }
@@ -805,6 +932,10 @@ function LeagueView({
   const [editPin, setEditPin] = useState(pin);
   const [saving, setSaving] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePin, setDeletePin] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const standings = useMemo(() => calculateStandings(league), [league]);
   const teamMap = useMemo(
     () => new Map(league.teams.map((team) => [team.id, team])),
@@ -819,6 +950,20 @@ function LeagueView({
     (league.matches.length === league.teams.length * (league.teams.length - 1)
       ? 2
       : 1);
+
+  useEffect(() => {
+    if (!deleteOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !deleting) setDeleteOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [deleteOpen, deleting]);
 
   async function saveScore(
     match: Match,
@@ -873,20 +1018,65 @@ function LeagueView({
     }
   }
 
+  function openDeleteDialog() {
+    setDeletePin(editPin);
+    setDeleteError("");
+    setDeleteOpen(true);
+  }
+
+  async function deleteLeague(event: FormEvent) {
+    event.preventDefault();
+    if (!/^\d{4}$/.test(deletePin)) {
+      setDeleteError("관리 PIN 4자리를 입력해 주세요.");
+      return;
+    }
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const response = await fetch(`/api/leagues/${league.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: deletePin }),
+      });
+      const body = (await response.json()) as {
+        deleted?: boolean;
+        error?: string;
+      };
+      if (!response.ok || !body.deleted) {
+        throw new Error(body.error || "리그를 삭제하지 못했습니다.");
+      }
+      sessionStorage.removeItem(`kickoff-pin-${league.id}`);
+      window.location.assign("/?deleted=1#saved-leagues");
+    } catch (cause) {
+      setDeleteError(
+        cause instanceof Error
+          ? cause.message
+          : "리그를 삭제하지 못했습니다.",
+      );
+      setDeleting(false);
+    }
+  }
+
   return (
-    <main className="league-page">
-      <header className="league-header">
-        <Link className="brand brand-light" href="/">
-          <span className="brand-mark">K</span>
-          <span>KICKOFF</span>
-        </Link>
-        <div className="live-pill">
-          <span /> LIVE LEAGUE
-        </div>
-        <button className="share-button" onClick={share}>
-          공유하기 <span>↗</span>
-        </button>
-      </header>
+    <>
+      <main className="league-page">
+        <header className="league-header">
+          <Link className="brand brand-light" href="/">
+            <span className="brand-mark">K</span>
+            <span>KICKOFF</span>
+          </Link>
+          <div className="live-pill">
+            <span /> LIVE LEAGUE
+          </div>
+          <div className="league-header-actions">
+            <button className="delete-league-button" onClick={openDeleteDialog}>
+              리그 삭제
+            </button>
+            <button className="share-button" onClick={share}>
+              공유하기 <span>↗</span>
+            </button>
+          </div>
+        </header>
 
       <section className="league-hero">
         <div>
@@ -1195,8 +1385,76 @@ function LeagueView({
             </div>
           )}
         </aside>
-      </div>
-    </main>
+        </div>
+      </main>
+      {deleteOpen && (
+        <div
+          className="delete-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deleting) {
+              setDeleteOpen(false);
+            }
+          }}
+        >
+          <form
+            className="delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            onSubmit={(event) => void deleteLeague(event)}
+          >
+            <span className="danger-mark" aria-hidden="true">
+              !
+            </span>
+            <p>DELETE LEAGUE</p>
+            <h2 id="delete-modal-title">정말 이 리그를 삭제하시겠습니까?</h2>
+            <p className="delete-warning">
+              <strong>{league.name}</strong>의 팀, 경기 일정, 점수와 순위
+              기록이 모두 삭제되며 복구할 수 없습니다.
+            </p>
+            <label>
+              <span>관리 PIN을 입력해 주세요</span>
+              <input
+                autoFocus
+                value={deletePin}
+                onChange={(event) =>
+                  setDeletePin(
+                    event.target.value.replace(/\D/g, "").slice(0, 4),
+                  )
+                }
+                inputMode="numeric"
+                type="password"
+                autoComplete="off"
+                placeholder="••••"
+                aria-label="삭제 확인 관리 PIN"
+              />
+            </label>
+            {deleteError && (
+              <p className="delete-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <div className="delete-modal-actions">
+              <button
+                type="button"
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleting}
+              >
+                취소
+              </button>
+              <button
+                className="confirm-delete"
+                type="submit"
+                disabled={deleting || deletePin.length !== 4}
+              >
+                {deleting ? "삭제 중..." : "확인하고 영구 삭제"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1209,6 +1467,9 @@ export default function Home() {
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("league")
       : null;
+  const deleted =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("deleted") === "1";
   const savedPin =
     typeof window !== "undefined" && leagueId
       ? (sessionStorage.getItem(`kickoff-pin-${leagueId}`) ?? "")
@@ -1282,5 +1543,10 @@ export default function Home() {
     return (
       <LeagueView league={league} pin={savedPin} onLeagueChange={setLeague} />
     );
-  return <SetupView onCreated={created} />;
+  return (
+    <SetupView
+      onCreated={created}
+      notice={deleted ? "리그 일정이 삭제되었습니다." : undefined}
+    />
+  );
 }

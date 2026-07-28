@@ -6,6 +6,13 @@ import {
 } from "./shared";
 
 type Pair = { home: number; away: number };
+type LeagueListRow = {
+  id: string;
+  name: string;
+  updated_at: string;
+};
+type TeamLeagueRow = { league_id: string };
+type MatchLeagueRow = { league_id: string; home_score: number | null };
 
 function isValidSchedule(
   schedule: Pair[],
@@ -52,6 +59,72 @@ function createId() {
     { length: 8 },
     () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
+}
+
+export async function GET() {
+  try {
+    const db = getSupabase();
+    const { data: leagues, error: leagueError } = await db
+      .from("leagues")
+      .select("id, name, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(100);
+    if (leagueError) throw leagueError;
+
+    const leagueRows = (leagues ?? []) as LeagueListRow[];
+    if (!leagueRows.length) {
+      return Response.json(
+        { leagues: [] },
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    const leagueIds = leagueRows.map((league) => league.id);
+    const [teamResult, matchResult] = await Promise.all([
+      db.from("teams").select("league_id").in("league_id", leagueIds),
+      db
+        .from("matches")
+        .select("league_id, home_score")
+        .in("league_id", leagueIds),
+    ]);
+    if (teamResult.error) throw teamResult.error;
+    if (matchResult.error) throw matchResult.error;
+
+    const teamCounts = new Map<string, number>();
+    ((teamResult.data ?? []) as TeamLeagueRow[]).forEach((team) => {
+      teamCounts.set(team.league_id, (teamCounts.get(team.league_id) ?? 0) + 1);
+    });
+    const matchCounts = new Map<string, number>();
+    const playedCounts = new Map<string, number>();
+    ((matchResult.data ?? []) as MatchLeagueRow[]).forEach((match) => {
+      matchCounts.set(
+        match.league_id,
+        (matchCounts.get(match.league_id) ?? 0) + 1,
+      );
+      if (match.home_score !== null) {
+        playedCounts.set(
+          match.league_id,
+          (playedCounts.get(match.league_id) ?? 0) + 1,
+        );
+      }
+    });
+
+    return Response.json(
+      {
+        leagues: leagueRows.map((league) => ({
+          id: league.id,
+          name: league.name,
+          updatedAt: league.updated_at,
+          teamCount: teamCounts.get(league.id) ?? 0,
+          matchCount: matchCounts.get(league.id) ?? 0,
+          playedCount: playedCounts.get(league.id) ?? 0,
+        })),
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
 
 export async function POST(request: Request) {
