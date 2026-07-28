@@ -16,6 +16,10 @@ test("build includes KICKOFF metadata and social preview", async () => {
 test("includes league scheduling, scoring, and standings product flows", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const api = await readFile(new URL("../app/api/leagues/route.ts", import.meta.url), "utf8");
+  const leagueApi = await readFile(
+    new URL("../app/api/leagues/[id]/route.ts", import.meta.url),
+    "utf8",
+  );
   const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
   assert.match(page, /calculateStandings/);
   assert.match(page, /최근 5경기/);
@@ -24,7 +28,12 @@ test("includes league scheduling, scoring, and standings product flows", async (
   assert.match(page, /overlapsPrevious \* 100/);
   assert.match(page, /이 일정으로 리그 확정/);
   assert.match(page, /두 번씩 대결/);
+  assert.match(page, /진행 중인 리그/);
+  assert.match(page, /정말 이 리그를 삭제하시겠습니까/);
   assert.match(api, /isValidSchedule/);
   assert.match(api, /from\("matches"\)\.insert/);
+  assert.match(api, /export async function GET/);
+  assert.match(leagueApi, /export async function DELETE/);
+  assert.match(leagueApi, /hashPin\(id, pin\)/);
   assert.match(schema, /enable row level security/);
 });
