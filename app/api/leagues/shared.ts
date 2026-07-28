@@ -36,6 +36,14 @@ export type LeagueResponse = {
 
 let supabaseClient: SupabaseClient | null = null;
 
+export function isNewManagerPin(pin: string) {
+  return /^\d{6}$/.test(pin);
+}
+
+export function isSupportedManagerPin(pin: string) {
+  return /^(?:\d{4}|\d{6})$/.test(pin);
+}
+
 export function getSupabase() {
   if (supabaseClient) return supabaseClient;
 

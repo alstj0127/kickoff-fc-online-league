@@ -2,6 +2,7 @@ import {
   errorResponse,
   getSupabase,
   hashPin,
+  isSupportedManagerPin,
   readLeague,
 } from "../../../shared";
 
@@ -17,6 +18,14 @@ export async function PATCH(
       awayScore?: number | null;
     };
     const pin = body.pin ?? "";
+    if (!isSupportedManagerPin(pin))
+      return Response.json(
+        {
+          error:
+            "관리 PIN 6자리를 입력해 주세요. 기존 리그는 4자리 PIN도 사용할 수 있습니다.",
+        },
+        { status: 400 },
+      );
     const bothEmpty = body.homeScore === null && body.awayScore === null;
     const bothScores =
       Number.isInteger(body.homeScore) &&

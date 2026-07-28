@@ -51,6 +51,12 @@ type Standing = Team & {
   form: ("W" | "D" | "L")[];
 };
 
+const NEW_MANAGER_PIN_LENGTH = 6;
+
+function isSupportedManagerPin(pin: string) {
+  return /^(?:\d{4}|\d{6})$/.test(pin);
+}
+
 const TEAM_COLORS = [
   ["#7158e2", "#a98eff"],
   ["#ff4f68", "#ff8b6a"],
@@ -395,8 +401,8 @@ function SetupView({
       setError("팀명은 서로 다르게 입력해 주세요.");
       return null;
     }
-    if (!/^\d{4}$/.test(pin)) {
-      setError("관리 PIN은 숫자 4자리로 정해 주세요.");
+    if (!/^\d{6}$/.test(pin)) {
+      setError("관리 PIN은 숫자 6자리로 정해 주세요.");
       return null;
     }
     if (!leagueName.trim()) {
@@ -563,17 +569,22 @@ function SetupView({
       <div className="pin-row">
         <div>
           <span>관리 PIN</span>
-          <small>점수 수정에 사용할 숫자 4자리</small>
+          <small>점수 수정과 리그 삭제에 사용할 숫자 6자리</small>
         </div>
         <input
           value={pin}
           onChange={(event) =>
-            setPin(event.target.value.replace(/\D/g, "").slice(0, 4))
+            setPin(
+              event.target.value
+                .replace(/\D/g, "")
+                .slice(0, NEW_MANAGER_PIN_LENGTH),
+            )
           }
+          maxLength={NEW_MANAGER_PIN_LENGTH}
           inputMode="numeric"
           type="password"
           autoComplete="new-password"
-          placeholder="••••"
+          placeholder="••••••"
           aria-label="관리 PIN"
         />
       </div>
@@ -970,8 +981,10 @@ function LeagueView({
     homeScore: number | null,
     awayScore: number | null,
   ) {
-    if (!/^\d{4}$/.test(editPin)) {
-      setMessage("관리 PIN 4자리를 입력해 주세요.");
+    if (!isSupportedManagerPin(editPin)) {
+      setMessage(
+        "관리 PIN 6자리를 입력해 주세요. 기존 리그는 4자리 PIN도 사용할 수 있습니다.",
+      );
       return false;
     }
     setSaving(match.id);
@@ -1026,8 +1039,10 @@ function LeagueView({
 
   async function deleteLeague(event: FormEvent) {
     event.preventDefault();
-    if (!/^\d{4}$/.test(deletePin)) {
-      setDeleteError("관리 PIN 4자리를 입력해 주세요.");
+    if (!isSupportedManagerPin(deletePin)) {
+      setDeleteError(
+        "관리 PIN 6자리를 입력해 주세요. 기존 리그는 4자리 PIN도 사용할 수 있습니다.",
+      );
       return;
     }
     setDeleting(true);
@@ -1302,12 +1317,16 @@ function LeagueView({
                   value={editPin}
                   onChange={(event) =>
                     setEditPin(
-                      event.target.value.replace(/\D/g, "").slice(0, 4),
+                      event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, NEW_MANAGER_PIN_LENGTH),
                     )
                   }
+                  maxLength={NEW_MANAGER_PIN_LENGTH}
                   inputMode="numeric"
                   type="password"
-                  placeholder="••••"
+                  placeholder="••••••"
+                  aria-label="관리 PIN (신규 6자리, 기존 리그 4자리)"
                 />
               </label>
             </div>
@@ -1420,13 +1439,16 @@ function LeagueView({
                 value={deletePin}
                 onChange={(event) =>
                   setDeletePin(
-                    event.target.value.replace(/\D/g, "").slice(0, 4),
+                    event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, NEW_MANAGER_PIN_LENGTH),
                   )
                 }
+                maxLength={NEW_MANAGER_PIN_LENGTH}
                 inputMode="numeric"
                 type="password"
                 autoComplete="off"
-                placeholder="••••"
+                placeholder="••••••"
                 aria-label="삭제 확인 관리 PIN"
               />
             </label>
@@ -1446,7 +1468,7 @@ function LeagueView({
               <button
                 className="confirm-delete"
                 type="submit"
-                disabled={deleting || deletePin.length !== 4}
+                disabled={deleting || !isSupportedManagerPin(deletePin)}
               >
                 {deleting ? "삭제 중..." : "확인하고 영구 삭제"}
               </button>

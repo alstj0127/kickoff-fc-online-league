@@ -2,6 +2,7 @@ import {
   errorResponse,
   getSupabase,
   hashPin,
+  isNewManagerPin,
   readLeague,
 } from "./shared";
 
@@ -161,9 +162,9 @@ export async function POST(request: Request) {
         { error: "팀명은 서로 달라야 합니다." },
         { status: 400 },
       );
-    if (!/^\d{4}$/.test(pin))
+    if (!isNewManagerPin(pin))
       return Response.json(
-        { error: "관리 PIN은 숫자 4자리여야 합니다." },
+        { error: "관리 PIN은 숫자 6자리여야 합니다." },
         { status: 400 },
       );
     if (!isValidSchedule(schedule, teamNames.length, meetingsPerPair)) {
